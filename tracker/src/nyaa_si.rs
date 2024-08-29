@@ -6,8 +6,6 @@ use xml::{reader::XmlEvent, EventReader};
 use std::{io::BufReader, vec};
 use reqwest;
 
-
-
 error_chain! {
     foreign_links {
         Io(std::io::Error);
@@ -15,10 +13,9 @@ error_chain! {
     }
 }
 
-#[warn(dead_code)]
-pub fn fetch() -> Result<Vec<Anime>> {
+pub fn fetch(name: &str) -> Result<Vec<Anime>> {
     // RSS feed testing
-    let resp = reqwest::blocking::get("https://nyaa.si/?page=rss&c=1_2")?;
+    let resp = reqwest::blocking::get(&format!("https://nyaa.si/?page=rss&c=1_2&q={}", name))?;
     let body = BufReader::new(resp);
 
     // XML parsing
@@ -46,16 +43,27 @@ pub fn fetch() -> Result<Vec<Anime>> {
 
             Ok(XmlEvent::Characters(value)) => {
                 if let Some(ref element_name) = current_element {
-                    if element_name == "link" {
-                        anime_temp.link = value.clone();
-                        animes.push(anime_temp.clone());
-                        anime_temp.link.clear();
-                    } else if element_name == "title" {
-                        clean_title(&value, &mut anime_temp);
+                    match element_name.as_str() {
+                        "link" => {
+                            if !value.ends_with(".torrent") {
+                                anime_temp.link.clear();
+                            } else {
+                                anime_temp.link = value.clone();
+                                animes.push(anime_temp.clone());
+                                anime_temp.link.clear();
+                            };                            
+                        }
+                        
+                        "title" => {
+                            clean_title(&value, &mut anime_temp);
+                        }
+
+                        _ => ()
                     }
                 }
             }
 
+            // i probably don't need this
             Ok(XmlEvent::EndElement { .. }) => {
                 current_element = None;
             }
@@ -89,7 +97,7 @@ fn clean_title(title: &str, anime_temp: &mut Anime) {
     if results.len() >= 3 {
         anime_temp.group = results[1].to_string();
         anime_temp.quality = results[3].to_string();
-// TODO if episode detected remove from name and add to struct 
+// TODO if episode detected remove from name and add to struct (how will i do this idk)
         anime_temp.name = results[2].to_string();
     }
 }
