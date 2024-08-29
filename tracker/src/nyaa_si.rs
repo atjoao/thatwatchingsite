@@ -43,22 +43,16 @@ pub fn fetch(name: &str) -> Result<Vec<Anime>> {
 
             Ok(XmlEvent::Characters(value)) => {
                 if let Some(ref element_name) = current_element {
-                    match element_name.as_str() {
-                        "link" => {
-                            if !value.ends_with(".torrent") {
-                                anime_temp.link.clear();
-                            } else {
-                                anime_temp.link = value.clone();
-                                animes.push(anime_temp.clone());
-                                anime_temp.link.clear();
-                            };                            
-                        }
-                        
-                        "title" => {
-                            clean_title(&value, &mut anime_temp);
-                        }
-
-                        _ => ()
+                    if element_name == "link" {
+                        if !value.ends_with(".torrent") {
+                            anime_temp.link.clear();
+                        } else {
+                            anime_temp.link = value.clone();
+                            animes.push(anime_temp.clone());
+                            anime_temp.link.clear();
+                        };
+                    } else if element_name == "title" {
+                        clean_title(&value, &mut anime_temp);                        
                     }
                 }
             }
