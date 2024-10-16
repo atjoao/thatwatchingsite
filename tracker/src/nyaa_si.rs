@@ -3,7 +3,7 @@ use crate::structs::Anime;
 use error_chain::error_chain;
 use regex::Regex;
 use xml::{reader::XmlEvent, EventReader};
-use std::{io::BufReader, os, process, vec};
+use std::{io::BufReader, vec};
 use reqwest;
 
 error_chain! {
