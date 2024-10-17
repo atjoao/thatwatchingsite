@@ -1,3 +1,4 @@
+// this needs to be refactored someday
 use crate::structs::Anime;
 
 use error_chain::error_chain;
